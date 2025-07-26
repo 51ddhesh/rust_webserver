@@ -1,4 +1,4 @@
-# Implementation of Web Server in Rust
+# Implementation of a Web Server in Rust
 
 
 
