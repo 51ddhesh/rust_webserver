@@ -2,6 +2,9 @@
 use std::net::{TcpListener, TcpStream}; // For networking primitives
 use std::io::{BufReader, prelude::*};   // For buffered reading and I/O traits
 use std::fs;                            // For file system operations
+use std::thread;
+use std::time::Duration;
+use rust_webserver::ThreadPool;
 
 /// Entry point of the web server application.
 /// 
@@ -11,14 +14,16 @@ fn main() {
     // Bind the TCP listener to the specified address and port.
     // `unwrap()` will panic if binding fails (e.g., port already in use).
     let listener = TcpListener::bind("127.0.0.1:6969").unwrap();
-
+    let pool = ThreadPool::new(4);  
     // Accept incoming connections in a loop.
     for stream in listener.incoming() {
         // Unwrap the Result to get the actual TcpStream.
         // If an error occurs, the server will panic.
         let stream = stream.unwrap();
         // Handle the connection (process the HTTP request and send a response).
-        handle_connection(stream);
+        pool.execute(|| {
+            handle_connection(stream);
+        });
     }
 }
 
@@ -41,11 +46,15 @@ fn handle_connection(mut stream: TcpStream) {
     // Determine the response based on the request line.
     // If the request is for the root path, serve hello.html with 200 OK.
     // Otherwise, serve 404.html with 404 NOT FOUND.
-    let (status_line, filename) = if request_line == "GET / HTTP/1.1" {
-        ("HTTP/1.1 200 OK", "pages/hello.html")
-    } else {
-        ("HTTP/1.1 404 NOT FOUND", "pages/404.html")
+    let (status_line, filename) = match &request_line[..] {
+        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "pages/hello.html"),
+        "GET /sleep HTTP/1.1" => {
+            thread::sleep(Duration::from_secs(5));
+            ("HTTP/1.1 200 OK", "pages/hello.html")
+        }
+        _ => ("HTTP/1.1 404 NOT FOUND", "pages/404.html"),
     };
+
 
     // Read the contents of the HTML file to be served.
     // `unwrap()` will panic if the file does not exist or cannot be read.
