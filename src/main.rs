@@ -42,9 +42,9 @@ fn handle_connection(mut stream: TcpStream) {
     // If the request is for the root path, serve hello.html with 200 OK.
     // Otherwise, serve 404.html with 404 NOT FOUND.
     let (status_line, filename) = if request_line == "GET / HTTP/1.1" {
-        ("HTTP/1.1 200 OK", "hello.html")
+        ("HTTP/1.1 200 OK", "pages/hello.html")
     } else {
-        ("HTTP/1.1 404 NOT FOUND", "404.html")
+        ("HTTP/1.1 404 NOT FOUND", "pages/404.html")
     };
 
     // Read the contents of the HTML file to be served.
